@@ -58,8 +58,8 @@ function Get-MatchingIP {
 }
 
 function Set-Metric-Silent {
-    netsh interface ipv4 set interface $script:EthName metric=10 | Out-Null
-    netsh interface ipv4 set interface "WLAN" metric=20 | Out-Null
+    cmd /c "netsh interface ipv4 set interface $script:EthName metric=10"
+    cmd /c "netsh interface ipv4 set interface \`"WLAN\`" metric=20"
 }
 
 function Add-Routes-Silent {
@@ -67,24 +67,24 @@ function Add-Routes-Silent {
     $wifiAdapter = Get-NetAdapter | Where-Object { $_.Name -eq "WLAN" -or $_.InterfaceDescription -match "Wi-Fi" }
 
     if ($ethAdapter) {
-        Remove-NetRoute -DestinationPrefix "192.168.0.0/16" -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-NetRoute -DestinationPrefix "172.23.0.0/16" -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-NetRoute -DestinationPrefix "0.0.0.0/0" -Confirm:$false -ErrorAction SilentlyContinue
+        cmd /c "route delete 192.168.0.0 mask 255.255.0.0 2>nul"
+        cmd /c "route delete 172.23.0.0 mask 255.255.0.0 2>nul"
+        cmd /c "route delete 0.0.0.0 mask 0.0.0.0 2>nul"
     }
 
     if ($wifiAdapter) {
-        Remove-NetRoute -DestinationPrefix "0.0.0.0/0" -Confirm:$false -ErrorAction SilentlyContinue
+        cmd /c "route delete 0.0.0.0 mask 0.0.0.0 2>nul"
     }
 
     Start-Sleep -Seconds 1
 
     if ($ethAdapter) {
-        route -p add 172.23.0.0 mask 255.255.0.0 $EthGateway >nul 2>&1
-        route -p add 192.168.0.0 mask 255.255.0.0 $EthGateway >nul 2>&1
+        cmd /c "route -p add 172.23.0.0 mask 255.255.0.0 $EthGateway"
+        cmd /c "route -p add 192.168.0.0 mask 255.255.0.0 $EthGateway"
     }
 
     if ($wifiAdapter) {
-        route -p add 0.0.0.0 mask 0.0.0.0 $WiFiGateway >nul 2>&1
+        cmd /c "route -p add 0.0.0.0 mask 0.0.0.0 $WiFiGateway"
     }
 }
 
