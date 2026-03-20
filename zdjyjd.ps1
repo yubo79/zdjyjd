@@ -58,15 +58,8 @@ function Get-MatchingIP {
 }
 
 function Set-Metric-Silent {
-    $ethAdapter = Get-NetAdapter | Where-Object { $_.Name -eq $script:EthName }
-    $wifiAdapter = Get-NetAdapter | Where-Object { $_.Name -eq "WLAN" -or $_.InterfaceDescription -match "Wi-Fi" }
-
-    if ($ethAdapter) {
-        Set-NetIPInterface -InterfaceIndex $ethAdapter.InterfaceIndex -InterfaceMetric 10 -AddressFamily IPv4 -ErrorAction SilentlyContinue
-    }
-    if ($wifiAdapter) {
-        Set-NetIPInterface -InterfaceIndex $wifiAdapter.InterfaceIndex -InterfaceMetric 20 -AddressFamily IPv4 -ErrorAction SilentlyContinue
-    }
+    netsh interface ipv4 set interface $script:EthName metric=10 | Out-Null
+    netsh interface ipv4 set interface "WLAN" metric=20 | Out-Null
 }
 
 function Add-Routes-Silent {
@@ -74,21 +67,24 @@ function Add-Routes-Silent {
     $wifiAdapter = Get-NetAdapter | Where-Object { $_.Name -eq "WLAN" -or $_.InterfaceDescription -match "Wi-Fi" }
 
     if ($ethAdapter) {
-        Remove-NetRoute -DestinationPrefix "192.168.0.0/16" -InterfaceIndex $ethAdapter.InterfaceIndex -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-NetRoute -DestinationPrefix "172.23.0.0/16" -InterfaceIndex $ethAdapter.InterfaceIndex -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-NetRoute -DestinationPrefix "192.168.0.0/16" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-NetRoute -DestinationPrefix "172.23.0.0/16" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-NetRoute -DestinationPrefix "0.0.0.0/0" -Confirm:$false -ErrorAction SilentlyContinue
     }
 
-    $wifiIdx = if ($wifiAdapter) { $wifiAdapter.InterfaceIndex } else { (Get-NetAdapter | Where-Object { $_.InterfaceDescription -match "Wi-Fi" } | Select-Object -First 1).InterfaceIndex }
+    if ($wifiAdapter) {
+        Remove-NetRoute -DestinationPrefix "0.0.0.0/0" -Confirm:$false -ErrorAction SilentlyContinue
+    }
 
-    Remove-NetRoute -DestinationPrefix "0.0.0.0/0" -InterfaceIndex $wifiIdx -Confirm:$false -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
 
     if ($ethAdapter) {
-        New-NetRoute -DestinationPrefix "172.23.0.0/16" -InterfaceIndex $ethAdapter.InterfaceIndex -NextHop $EthGateway -PolicyStore ActiveStore -ErrorAction SilentlyContinue
-        New-NetRoute -DestinationPrefix "192.168.0.0/16" -InterfaceIndex $ethAdapter.InterfaceIndex -NextHop $EthGateway -PolicyStore ActiveStore -ErrorAction SilentlyContinue
+        route -p add 172.23.0.0 mask 255.255.0.0 $EthGateway >nul 2>&1
+        route -p add 192.168.0.0 mask 255.255.0.0 $EthGateway >nul 2>&1
     }
 
-    if ($wifiIdx) {
-        New-NetRoute -DestinationPrefix "0.0.0.0/0" -InterfaceIndex $wifiIdx -NextHop $WiFiGateway -PolicyStore ActiveStore -ErrorAction SilentlyContinue
+    if ($wifiAdapter) {
+        route -p add 0.0.0.0 mask 0.0.0.0 $WiFiGateway >nul 2>&1
     }
 }
 
