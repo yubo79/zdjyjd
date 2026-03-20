@@ -249,14 +249,15 @@ function Restore-Default {
     Write-Host ""
     Write-Host "3. 重新配置以太网（确保网关存在）..." -ForegroundColor Yellow
     if ($ethAdapter -and $ethIP) {
-        $prefixLength = (Get-NetIPAddress -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4).PrefixLength
-        if (-not $prefixLength) { $prefixLength = 23 }
-
+        $prefixLength = 23
         $currentIP = Get-NetIPAddress -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue
         if ($currentIP) {
-            Remove-NetIPAddress -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
-            Remove-NetRoute -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+            $prefixLength = $currentIP.PrefixLength
         }
+
+        Remove-NetIPAddress -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-NetRoute -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
 
         New-NetIPAddress -InterfaceIndex $ethAdapter.InterfaceIndex -IPAddress $ethIP -PrefixLength $prefixLength -DefaultGateway $EthGateway -ErrorAction SilentlyContinue
         Set-DnsClientServerAddress -InterfaceIndex $ethAdapter.InterfaceIndex -ServerAddresses ($EthDNS1, $EthDNS2) -ErrorAction SilentlyContinue
