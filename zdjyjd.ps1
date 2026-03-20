@@ -119,11 +119,11 @@ function Verify-Config {
 
     Write-Host ""
     Write-Host "测试内网172.23网段连通性（ping $EthGateway）..." -ForegroundColor Yellow
-    Test-Connection -ComputerName $EthGateway -Count 4 -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Test-Connection -ComputerName $EthGateway -Count 4 -ErrorAction SilentlyContinue |
         Select-Object Address, Status, ResponseTime | Format-Table -AutoSize
 
     Write-Host "测试内网192.168网段连通性（ping 192.168.11.150）..." -ForegroundColor Yellow
-    Test-Connection -ComputerName "192.168.11.150" -Count 4 -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Test-Connection -ComputerName "192.168.11.150" -Count 4 -ErrorAction SilentlyContinue |
         Select-Object Address, Status, ResponseTime | Format-Table -AutoSize
 
     Write-Host "测试外网连通性（ping 8.8.8.8）..." -ForegroundColor Yellow
