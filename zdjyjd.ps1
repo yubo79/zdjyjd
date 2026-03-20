@@ -236,10 +236,14 @@ function Restore-Default {
     Write-Host ""
     Write-Host "2. 恢复网卡默认跃点..." -ForegroundColor Yellow
     if ($ethAdapter) {
-        Set-NetIPInterface -InterfaceIndex $ethAdapter.InterfaceIndex -InterfaceMetric Auto -AddressFamily IPv4 -ErrorAction SilentlyContinue
+        Remove-NetIPAddress -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-NetRoute -InterfaceIndex $ethAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
     }
     if ($wifiAdapter) {
-        Set-NetIPInterface -InterfaceIndex $wifiAdapter.InterfaceIndex -InterfaceMetric Auto -AddressFamily IPv4 -ErrorAction SilentlyContinue
+        Remove-NetIPAddress -InterfaceIndex $wifiAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-NetRoute -InterfaceIndex $wifiAdapter.InterfaceIndex -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
     }
 
     Write-Host ""
